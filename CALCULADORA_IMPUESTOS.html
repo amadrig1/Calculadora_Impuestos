@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CALCULADORA IMPUESTOS</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --primary-hover: #004494;
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #d1d5db;
+            --success: #10b981;
+            --error: #dc2626;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .calculator-container { background-color: var(--card-bg); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); width: 100%; max-width: 500px; padding: 32px; }
+        h2 { font-size: 24px; margin-bottom: 24px; color: var(--primary); text-align: center; font-weight: 600; }
+        .form-group { margin-bottom: 20px; }
+        .row { display: flex; gap: 16px; margin-bottom: 20px; }
+        .col { flex: 1; }
+        label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--text-muted); }
+        input, select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 16px; transition: border-color 0.2s, box-shadow 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1); }
+        .currency-input { position: relative; }
+        .currency-input::before { content: '$'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: 500; }
+        .currency-input input { padding-left: 28px; }
+		input#precio { color: #f03333; font-weight: bold; font-size: 130%; }
+        .results { background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; margin-top: 24px; margin-bottom: 24px; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+        .result-row:not(:last-child) { border-bottom: 1px solid #e2e8f0; }
+        .result-label { font-weight: 500; color: var(--text-muted); }
+        .result-value { font-weight: 700; font-size: 18px; }
+        .result-value.highlight { color: var(--primary); font-size: 22px; }
+        .whatsapp-preview { margin-top: 24px; }
+        textarea { width: 100%; /*height: 140px;*/ padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; resize: none; background-color: #f9fafb; color: var(--text-main); line-height: 1.5; margin-bottom: 12px; }
+        button { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        button:hover { background-color: var(--primary-hover); }
+        .loading-tc { font-size: 12px; color: var(--primary); display: block; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+    <div class="calculator-container">
+        <h2>Calculadora de Impuestos</h2>
+        
+        <div class="form-group">
+            <label for="tc">Tipo de cambio BCCR (₡)</label>
+            <input type="number" id="tc" step="0.01" placeholder="Cargando..." oninput="calculate()" readonly>
+            <span id="tc-status" class="loading-tc">Intentando obtener tipo de cambio oficial...</span>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label for="imp">% Impuestos</label>
+                <select id="imp" onchange="calculate()">
+                    <option value="68.4" selected>68.4%</option>
+                    <option value="48.1">48.1%</option>
+                    <option value="35">35%</option>
+                    <option value="33">33%</option>
+                    <option value="20">20%</option>
+                </select>
+            </div>
+            <div class="col">
+                <label for="seguro">Seguro ($)</label>
+                <input type="number" id="seguro" value="200" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="precio">Precio Vehículo ($)</label>
+            <div class="currency-input">
+                <input type="number" id="precio" placeholder="0.00" value="1234" oninput="calculate()">
+            </div>
+        </div>
+
+        <div class="results">
+            <div class="result-row">
+                <span class="result-label">Impuestos Exactos:</span>
+                <span class="result-value" id="res-impuestos">₡0</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Redondeo (Monto Final):</span>
+                <span class="result-value highlight" id="res-redondeo">₡0</span>
+            </div>
+        </div>
+
+        <div class="whatsapp-preview">
+            <label>Mensaje para WhatsApp:</label>
+            <textarea id="whatsapp-msg" readonly></textarea>
+            <button id="copyBtn" onclick="copyMessage()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copiar Mensaje
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const crcFormatter = new Intl.NumberFormat('es-CR', {
+            style: 'currency',
+            currency: 'CRC',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
+
+        function getCurrentDate() {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            return `${dd}/${mm}/${yyyy}`;
+        }
+
+        function calculate() {
+            const tc = parseFloat(document.getElementById('tc').value) || 0;
+            const imp = parseFloat(document.getElementById('imp').value) || 0;
+            const seguro = parseFloat(document.getElementById('seguro').value) || 0;
+            const precio = parseFloat(document.getElementById('precio').value) || 0;
+
+            const baseImponibleCRC = (precio + seguro) * tc;
+            const impuestos = baseImponibleCRC * (imp / 100);
+            const redondeo = Math.ceil(impuestos / 50000) * 50000;
+
+            document.getElementById('res-impuestos').textContent = crcFormatter.format(impuestos);
+            document.getElementById('res-redondeo').textContent = crcFormatter.format(redondeo);
+
+            generateMessage(redondeo);
+        }
+
+        function generateMessage(montoRedondeado) {
+            const fecha = getCurrentDate();
+            let montoStr = crcFormatter.format(montoRedondeado).replace(',00', '');
+            const mensaje = `Los *impuestos* aproximados al *${fecha}* para este vehículo son: *${montoStr}*\n\n*Importante* - El monto puede variar dependiendo de:\n- Fluctuaciones en el precio internacional del dólar.\n- Cambios en la forma en la que se cobran los impuestos en CR.`;
+            document.getElementById('whatsapp-msg').value = mensaje;
+        }
+
+        function copyMessage() {
+            const msg = document.getElementById('whatsapp-msg').value;
+            if(!msg || msg.includes('₡0')) return; 
+            
+            navigator.clipboard.writeText(msg).then(() => {
+                const btn = document.getElementById('copyBtn');
+                const originalHTML = btn.innerHTML;
+                
+                btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> ¡Copiado!`;
+                btn.style.backgroundColor = 'var(--success)';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.backgroundColor = '';
+                }, 2000);
+            });
+        }
+
+        async function fetchExchangeRate() {
+            const statusText = document.getElementById('tc-status');
+			const fecha = getCurrentDate();
+            try {
+                const response = await fetch('https://api.hacienda.go.cr/indicadores/tc');
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Accedemos directamente a la estructura json proporcionada
+                if (data && data.dolar && data.dolar.venta && data.dolar.venta.valor) {
+                    const tipoCambio = parseFloat(data.dolar.venta.valor);
+                    document.getElementById('tc').value = tipoCambio;
+                    statusText.textContent = `Actualizado ${fecha} - ₡${tipoCambio} (Fuente: Min. Hacienda)`;
+                    statusText.style.color = 'var(--success)';
+                    calculate();
+                } else {
+                    throw new Error('Estructura de JSON inesperada');
+                }
+
+            } catch (error) {
+                console.error('Error al obtener el tipo de cambio:', error);
+                
+                statusText.textContent = 'Servicio no disponible. Por favor, ingresa el TC manualmente.';
+                statusText.style.color = 'var(--error)';
+                calculate(); 
+            }
+        }
+
+        window.onload = () => {
+            fetchExchangeRate();
+            calculate();
+        };
+    </script>
+</body>
+</html>
