@@ -9,7 +9,7 @@
         :root {
             --primary: #0056b3;
             --primary-hover: #004494;
-            --bg-color: #f4f7f6;
+            --bg-color: #eaeaea;
             --card-bg: #ffffff;
             --text-main: #333333;
             --text-muted: #666666;
@@ -18,7 +18,7 @@
             --error: #dc2626;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-image: url('images/logo.png'); background-repeat: repeat; background-size: 400px; background-position: top left; background-attachment: fixed; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-image: url('images/logo.png'); background-repeat: repeat; background-size: 240px; background-position: center; background-attachment: fixed; background-blend-mode: color-dodge; background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
         .calculator-container { background-color: var(--card-bg); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); width: 100%; max-width: 500px; padding: 32px; }
         h2 { font-size: 24px; margin-bottom: 24px; color: var(--primary); text-align: center; font-weight: 600; }
         .form-group { margin-bottom: 20px; }
@@ -138,7 +138,7 @@
         function generateMessage(montoRedondeado) {
             const fecha = getCurrentDate();
             let montoStr = crcFormatter.format(montoRedondeado).replace(',00', '');
-            const mensaje = `Los *impuestos* aproximados al *${fecha}* para este vehículo son: *${montoStr}*\n\n*Importante* - El monto puede variar dependiendo de:\n- Fluctuaciones en el precio internacional del dólar.\n- Cambios en la forma en la que se cobran los impuestos en CR.`;
+            const mensaje = `Los *impuestos* aproximados al *${fecha}* para este vehículo son: *${montoStr}*\n\n*Importante*\n- El monto no contempla gastos adicionales ni costos inherentes al proceso de nacionalización.\n- El monto puede variar dependiendo de:\n-- Fluctuaciones en el precio internacional del dólar.\n-- Cambios en la forma en la que se cobran los impuestos en CR.`;
             document.getElementById('whatsapp-msg').value = mensaje;
         }
 
