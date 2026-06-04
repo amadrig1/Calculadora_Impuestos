@@ -138,7 +138,7 @@
         function generateMessage(montoRedondeado) {
             const fecha = getCurrentDate();
             let montoStr = crcFormatter.format(montoRedondeado).replace(',00', '');
-            const mensaje = `Los *impuestos* aproximados al *${fecha}* para este vehículo son: *${montoStr}*\n\n*Importante*\n• El monto no contempla gastos adicionales ni costos inherentes al proceso de nacionalización.\n• El monto puede variar dependiendo de:\n•• Fluctuaciones en el precio internacional del dólar.\n•• Cambios en la forma en la que se cobran los impuestos en CR.`;
+            const mensaje = `Los *impuestos* aproximados al *${fecha}* para este vehículo son: *${montoStr}*\n\n*Importante*\n► El monto no contempla gastos adicionales ni costos inherentes al proceso de nacionalización.\n► El monto puede variar dependiendo de:\n►► Fluctuaciones en el precio internacional del dólar.\n►► Cambios en la forma en la que se cobran los impuestos en CR.`;
             document.getElementById('whatsapp-msg').value = mensaje;
         }
 
