@@ -111,6 +111,9 @@
             maximumFractionDigits: 0
         });
 
+        // Variable global para rastrear el timestamp exacto de la última consulta exitosa
+        let lastFetchTime = 0;
+
         function getCurrentDate() {
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
@@ -164,7 +167,6 @@
             const statusText = document.getElementById('tc-status');
             const fecha = getCurrentDate();
             try {
-                // Tu URL de Cloudflare Worker ya configurada
                 const proxyUrl = 'https://hacienda-cors-proxy.andres-madrigal.workers.dev/'; 
                 const response = await fetch(proxyUrl);
                 
@@ -172,7 +174,6 @@
                     throw new Error(`Error HTTP: ${response.status}`);
                 }
                 
-                // Leemos como texto primero para evitar caídas por HTML/Error 521 de Hacienda
                 const rawText = await response.text();
                 
                 if (rawText.includes("error code:") || !rawText.trim().startsWith("{")) {
@@ -181,12 +182,14 @@
                 
                 const data = JSON.parse(rawText);
                 
-                // Accedemos a la estructura original del JSON
                 if (data && data.dolar && data.dolar.venta && data.dolar.venta.valor) {
                     const tipoCambio = parseFloat(data.dolar.venta.valor);
                     document.getElementById('tc').value = tipoCambio;
                     statusText.textContent = `Actualizado ${fecha} - ₡${tipoCambio} (Fuente: Min. Hacienda)`;
                     statusText.style.color = 'var(--success)';
+                    
+                    // Guardamos la marca de tiempo exacta del éxito
+                    lastFetchTime = Date.now();
                     calculate();
                 } else {
                     throw new Error('Estructura de JSON inesperada');
@@ -200,6 +203,18 @@
                 calculate(); 
             }
         }
+
+        // Evento que se dispara cada vez que el usuario vuelve a enfocar la pestaña
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                const hrsInMs = 4 * 60 * 60 * 1000; // Umbral de expiración: 4 horas
+                
+                // Si pasaron más de 4 horas desde la última consulta exitosa, revalida silenciosamente
+                if (Date.now() - lastFetchTime > hrsInMs) {
+                    fetchExchangeRate();
+                }
+            }
+        });
 
         window.onload = () => {
             fetchExchangeRate();
