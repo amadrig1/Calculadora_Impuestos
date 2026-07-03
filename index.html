@@ -164,7 +164,7 @@
             const statusText = document.getElementById('tc-status');
             const fecha = getCurrentDate();
             try {
-                // CHANGED: Routing through your serverless proxy/worker URL to bypass CORS
+                // Tu URL de Cloudflare Worker ya configurada
                 const proxyUrl = 'https://hacienda-cors-proxy.andres-madrigal.workers.dev/'; 
                 const response = await fetch(proxyUrl);
                 
@@ -172,9 +172,16 @@
                     throw new Error(`Error HTTP: ${response.status}`);
                 }
                 
-                const data = await response.json();
+                // Leemos como texto primero para evitar caídas por HTML/Error 521 de Hacienda
+                const rawText = await response.text();
                 
-                // Accedemos directamente a la estructura json proporcionada
+                if (rawText.includes("error code:") || !rawText.trim().startsWith("{")) {
+                    throw new Error("El servidor de Hacienda está caído o fuera de servicio temporalmente.");
+                }
+                
+                const data = JSON.parse(rawText);
+                
+                // Accedemos a la estructura original del JSON
                 if (data && data.dolar && data.dolar.venta && data.dolar.venta.valor) {
                     const tipoCambio = parseFloat(data.dolar.venta.valor);
                     document.getElementById('tc').value = tipoCambio;
@@ -188,7 +195,7 @@
             } catch (error) {
                 console.error('Error al obtener el tipo de cambio:', error);
                 
-                statusText.textContent = 'Servicio no disponible. Por favor, ingresa el TC manualmente.';
+                statusText.textContent = 'Hacienda no responde. Por favor, ingresa el TC manualmente.';
                 statusText.style.color = 'var(--error)';
                 calculate(); 
             }
